@@ -1,4 +1,9 @@
-# app.py — entry point alias required by openenv validate
+# app.py — entry point required by openenv validate
 from server.main import app
+import uvicorn
 
-__all__ = ["app"]
+def main():
+    uvicorn.run(app, host="0.0.0.0", port=7860)
+
+if __name__ == "__main__":
+    main()
