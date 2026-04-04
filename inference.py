@@ -30,6 +30,14 @@ from openai import OpenAI
 # Config — read from environment variables
 # ---------------------------------------------------------------------------
 
+# API_BASE_URL: str = os.environ.get("API_BASE_URL", "https://api.openai.com/v1")
+# API_KEY:      str = os.environ.get("HF_TOKEN", os.environ.get("OPENAI_API_KEY", ""))
+# MODEL_NAME:   str = os.environ.get("MODEL_NAME", "gpt-4o-mini")
+# ENV_URL:      str = os.environ.get("ENV_URL", "http://localhost:7860").rstrip("/")
+
+from dotenv import load_dotenv
+load_dotenv()
+
 API_BASE_URL: str = os.environ.get("API_BASE_URL", "https://api.openai.com/v1")
 API_KEY:      str = os.environ.get("HF_TOKEN", os.environ.get("OPENAI_API_KEY", ""))
 MODEL_NAME:   str = os.environ.get("MODEL_NAME", "gpt-4o-mini")

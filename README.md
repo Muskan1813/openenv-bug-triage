@@ -183,11 +183,12 @@ Once deployed, the environment exposes these endpoints:
 
 Scores achieved by `gpt-4o-mini` running `inference.py`:
 
-| Task | Score | Success | Steps Used |
-|---|---|---|---|
-| Easy | ~0.75 | ✅ | 1–3 |
-| Medium | ~0.55 | ✅ | 10–15 |
-| Hard | ~0.30 | ❌ | 25 |
+| Task   | Score  | Success | Steps Used |
+|--------|--------|---------|------------|
+| Easy   | 1.0000 | ✅      | 1          |
+| Medium | 0.8200 | ✅      | 5          |
+| Hard   | 0.8008 | ✅      | 12         |
+| **Overall** | **0.8736** | ✅ | - |
 
 > Hard task is intentionally difficult — even frontier models struggle with
 > the security detection and correct prioritization components.
@@ -203,7 +204,7 @@ Scores achieved by `gpt-4o-mini` running `inference.py`:
 ### Option 1 — Run with Docker (recommended)
 
 ```bash
-git clone <your-repo-url>
+git clone https://huggingface.co/spaces/muskan040/bug-triage-env
 cd openenv-bug-triage
 
 docker build -t bug-triage-env .
