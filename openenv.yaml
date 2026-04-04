@@ -1,0 +1,80 @@
+name: bug-triage-env
+version: "1.0.0"
+description: >
+  A real-world software engineering environment where an AI agent triages
+  bug reports and reviews code. The agent must classify severity, assign
+  bugs to the correct team, and write meaningful review comments — tasks
+  that every software team performs daily.
+author: "openenv-bug-triage"
+tags:
+  - openenv
+  - code-review
+  - triage
+  - software-engineering
+  - bug-classification
+
+tasks:
+  - id: easy
+    name: "Single Bug Classification"
+    description: >
+      Classify the severity of a single bug report (critical/high/medium/low).
+      The agent receives one bug report and must respond with the correct
+      severity label. Partial credit for off-by-one severity levels.
+    max_steps: 3
+    difficulty: easy
+    success_threshold: 0.6
+
+  - id: medium
+    name: "Bug Queue Triage"
+    description: >
+      Process a queue of 5 bug reports. For each bug the agent must classify
+      severity AND assign it to the correct team (frontend/backend/infra/security).
+      Partial credit is awarded per-bug based on severity + team accuracy.
+    max_steps: 15
+    difficulty: medium
+    success_threshold: 0.5
+
+  - id: hard
+    name: "Full Code Review Pipeline"
+    description: >
+      Handle a mixed queue of 8 bug reports and 3 pull requests. The agent must
+      triage bugs, write PR review comments, detect security vulnerabilities,
+      and produce a prioritized fix order. Requires multi-step reasoning and
+      domain judgment that genuinely challenges frontier models.
+    max_steps: 25
+    difficulty: hard
+    success_threshold: 0.4
+
+entrypoint: "uvicorn server.main:app --host 0.0.0.0 --port 7860"
+
+observation_space:
+  type: object
+  description: "Current bug/PR item with metadata, available actions, and step feedback"
+  fields:
+    task_id:         "string — active task identifier (easy/medium/hard)"
+    episode_id:      "string — unique ID for this episode"
+    item_index:      "int — index of current item in the queue (0-based)"
+    total_items:     "int — total items in this episode's queue"
+    item_type:       "string — 'bug_report' or 'pull_request'"
+    title:           "string — bug/PR title"
+    body:            "string — full description"
+    labels:          "list[string] — existing labels"
+    reporter:        "string — who filed this item"
+    available_actions: "list[string] — valid action names the agent can take"
+    step_number:     "int — current step within the episode"
+    max_steps:       "int — maximum steps before episode ends"
+    current_score:   "float — cumulative score so far (0.0–1.0)"
+    feedback:        "string — result/feedback from the previous action"
+    echoed_message:  "string — mirrors feedback for inference script compatibility"
+
+action_space:
+  type: string
+  description: >
+    A JSON string with an 'action' key and action-specific parameters.
+    The agent sends this as the 'message' field.
+  examples:
+    - '{"action": "classify", "severity": "critical"}'
+    - '{"action": "triage", "severity": "high", "team": "backend", "comment": "Needs immediate fix"}'
+    - '{"action": "review_pr", "verdict": "request_changes", "comment": "Missing input validation on line 42", "security_issue": true}'
+    - '{"action": "prioritize", "order": ["BUG-003", "BUG-001", "BUG-002"]}'
+    - '{"action": "skip"}'

@@ -1,0 +1,192 @@
+{
+  "bugs": [
+    {
+      "id": "BUG-001",
+      "title": "Login endpoint returns 500 on empty password field",
+      "body": "Steps to reproduce:\n1. POST /api/auth/login with JSON body: {\"email\": \"user@example.com\", \"password\": \"\"}\n2. Server responds with HTTP 500 Internal Server Error\n3. Error log shows: NullPointerException in PasswordHasher.verify()\n\nExpected: 400 Bad Request with validation error\nActual: 500 crash, potentially leaking stack trace to client",
+      "labels": ["authentication", "api", "crash"],
+      "reporter": "alice@company.com",
+      "created_at": "2024-01-15T09:23:00Z",
+      "ground_truth": {
+        "severity": "critical",
+        "team": "security",
+        "keywords": ["authentication", "crash", "input validation", "security"]
+      }
+    },
+    {
+      "id": "BUG-002",
+      "title": "Dashboard chart renders with wrong date range after timezone change",
+      "body": "When a user changes their profile timezone from UTC to PST, the analytics dashboard charts continue to show data in UTC. The date axis labels are wrong and the daily aggregations are shifted by 8 hours.\n\nReproduction:\n1. Set profile timezone to America/Los_Angeles\n2. Navigate to Analytics > Overview\n3. Chart shows yesterday's data starting at 8 PM instead of midnight\n\nAffects all chart types (line, bar, pie). Confirmed on Chrome and Firefox.",
+      "labels": ["frontend", "charts", "timezone", "ui-bug"],
+      "reporter": "bob@company.com",
+      "created_at": "2024-01-15T10:45:00Z",
+      "ground_truth": {
+        "severity": "medium",
+        "team": "frontend",
+        "keywords": ["timezone", "rendering", "ui", "charts"]
+      }
+    },
+    {
+      "id": "BUG-003",
+      "title": "Database connection pool exhausted under moderate load",
+      "body": "Production alert: DB connection pool hitting max limit (100 connections) during normal business hours with ~200 concurrent users. New requests queue and timeout after 30s.\n\nMetrics from Datadog:\n- Avg connections in use: 98/100 (9am-5pm)\n- Query P99 latency jumped from 120ms to 8000ms\n- 3% of requests returning 503 during peak\n\nSuspect: Long-running analytics queries not releasing connections, or connection leak in the new reporting module deployed last Tuesday.",
+      "labels": ["database", "performance", "production", "backend"],
+      "reporter": "carol@company.com",
+      "created_at": "2024-01-15T11:00:00Z",
+      "ground_truth": {
+        "severity": "high",
+        "team": "backend",
+        "keywords": ["database", "connection pool", "performance", "production outage"]
+      }
+    },
+    {
+      "id": "BUG-004",
+      "title": "Typo in onboarding email subject line",
+      "body": "The welcome email sent to new users has a typo in the subject line.\n\nCurrent: \"Welcme to Our Platform!\"\nExpected: \"Welcome to Our Platform!\"\n\nThis affects all new registrations. Not urgent but looks unprofessional.",
+      "labels": ["email", "copy", "minor"],
+      "reporter": "dave@company.com",
+      "created_at": "2024-01-15T13:15:00Z",
+      "ground_truth": {
+        "severity": "low",
+        "team": "frontend",
+        "keywords": ["typo", "email", "copy", "minor"]
+      }
+    },
+    {
+      "id": "BUG-005",
+      "title": "API rate limiter bypassed via IPv6 addresses",
+      "body": "Security finding: Our rate limiter tracks clients by IPv4 address. Clients using IPv6 addresses (or toggling between IPv4/IPv6) can bypass rate limits entirely.\n\nProof of concept:\n1. Run the attached script that alternates between IPv4 and IPv6 on loopback\n2. 10,000 requests sent in 60 seconds — none rate-limited\n\nRate limit policy is 100 req/min per IP. This allows unlimited scraping, credential stuffing, and API abuse. Affects all public endpoints.",
+      "labels": ["security", "rate-limiting", "api", "vulnerability"],
+      "reporter": "security-team@company.com",
+      "created_at": "2024-01-15T14:00:00Z",
+      "ground_truth": {
+        "severity": "critical",
+        "team": "security",
+        "keywords": ["security vulnerability", "rate limit bypass", "IPv6", "abuse"]
+      }
+    },
+    {
+      "id": "BUG-006",
+      "title": "CSV export missing last row when total rows divisible by 1000",
+      "body": "When exporting data to CSV, if the total number of rows is exactly divisible by 1000 (e.g. 2000, 3000), the last row is omitted from the export file.\n\nReproduction:\n1. Create exactly 2000 records\n2. Export to CSV\n3. Open CSV — only 1999 rows present\n\nWith 2001 records, all 2001 are exported correctly. Off-by-one error in pagination logic (page size = 1000).",
+      "labels": ["export", "csv", "off-by-one", "backend"],
+      "reporter": "eve@company.com",
+      "created_at": "2024-01-15T15:30:00Z",
+      "ground_truth": {
+        "severity": "medium",
+        "team": "backend",
+        "keywords": ["off-by-one", "pagination", "export", "data loss"]
+      }
+    },
+    {
+      "id": "BUG-007",
+      "title": "Kubernetes pods OOMKilled during nightly batch job",
+      "body": "Every night at 2am the batch processing pods are killed with OOMKilled status. The nightly report generation job processes ~5M records and the pods hit the 2GB memory limit.\n\nk8s events:\nKilled pod batch-worker-xyz Reason: OOMKilled\nLimits: memory=2Gi, cpu=1000m\n\nOptions:\n1. Increase memory limit to 4Gi\n2. Stream records instead of loading all into memory\n3. Split job into smaller chunks\n\nNightly reports are delayed by 4-6 hours while pods restart.",
+      "labels": ["infrastructure", "kubernetes", "memory", "batch-jobs"],
+      "reporter": "frank@company.com",
+      "created_at": "2024-01-15T08:00:00Z",
+      "ground_truth": {
+        "severity": "high",
+        "team": "infra",
+        "keywords": ["OOMKilled", "kubernetes", "memory limit", "batch job", "infrastructure"]
+      }
+    },
+    {
+      "id": "BUG-008",
+      "title": "User profile pictures not loading in Safari 16",
+      "body": "Profile pictures fail to load for users on Safari 16.x on macOS Ventura. The image element shows a broken image icon. Chrome and Firefox work fine.\n\nNetwork tab shows the image request succeeds (200 OK) but Safari fails to render it. The images are served as WebP format — Safari 16 added WebP support but our Content-Type header is incorrectly set to image/jpeg for WebP files.\n\nAffects approximately 12% of our user base (Safari users).",
+      "labels": ["frontend", "images", "safari", "browser-compatibility"],
+      "reporter": "grace@company.com",
+      "created_at": "2024-01-15T16:00:00Z",
+      "ground_truth": {
+        "severity": "medium",
+        "team": "frontend",
+        "keywords": ["Safari", "WebP", "Content-Type", "browser compatibility", "images"]
+      }
+    }
+  ],
+  "pull_requests": [
+    {
+      "id": "PR-101",
+      "title": "Add JWT refresh token rotation",
+      "body": "## Summary\nImplements refresh token rotation as recommended by OAuth 2.0 security best practices.\n\n## Changes\n- New `POST /api/auth/refresh` endpoint\n- Refresh tokens now single-use (rotated on each use)\n- Old refresh token invalidated immediately after rotation\n- Added `refresh_token_family` tracking to detect token reuse attacks\n\n## Code snippet\n```python\ndef rotate_refresh_token(old_token: str) -> tuple[str, str]:\n    family = get_token_family(old_token)\n    if family.is_compromised:\n        revoke_entire_family(family)\n        raise SecurityException('Token reuse detected')\n    new_access = generate_access_token()\n    new_refresh = generate_refresh_token(family_id=family.id)\n    invalidate_token(old_token)\n    return new_access, new_refresh\n```\n\n## Testing\n- Unit tests added for rotation logic\n- Integration test for token reuse detection\n- No performance regression (< 5ms overhead)\n\n## Security notes\nThis closes a known attack vector where stolen refresh tokens could be used indefinitely.",
+      "labels": ["security", "authentication", "backend"],
+      "author": "henry@company.com",
+      "base_branch": "main",
+      "files_changed": 8,
+      "additions": 245,
+      "deletions": 31,
+      "ground_truth": {
+        "verdict": "approve",
+        "has_security_issue": false,
+        "review_keywords": ["refresh token rotation", "security", "OAuth", "token reuse detection"],
+        "quality_score": 0.9
+      }
+    },
+    {
+      "id": "PR-102",
+      "title": "Fix CSV pagination off-by-one error",
+      "body": "## Summary\nFixes BUG-006 — last row missing when total rows divisible by 1000.\n\n## Root Cause\n```python\n# BEFORE (buggy)\nfor page in range(total_rows // page_size):   # misses last page when exact multiple\n    yield fetch_page(page)\n\n# AFTER (fixed)\nimport math\nfor page in range(math.ceil(total_rows / page_size)):  # correctly handles all cases\n    yield fetch_page(page)\n```\n\n## Testing\n- Added test cases for: 999 rows, 1000 rows, 1001 rows, 2000 rows, 2001 rows\n- All pass. Previously 1000 and 2000 would fail.\n\n## Risk\nLow. Single line change in pagination utility function.",
+      "labels": ["bugfix", "backend", "csv", "export"],
+      "author": "iris@company.com",
+      "base_branch": "main",
+      "files_changed": 2,
+      "additions": 12,
+      "deletions": 3,
+      "ground_truth": {
+        "verdict": "approve",
+        "has_security_issue": false,
+        "review_keywords": ["off-by-one", "math.ceil", "pagination", "edge case testing"],
+        "quality_score": 0.85
+      }
+    },
+    {
+      "id": "PR-103",
+      "title": "Optimize user search with raw SQL and disable query logging",
+      "body": "## Summary\nSpeeds up user search from 2s to 50ms by rewriting ORM query as raw SQL.\n\n## Changes\n```python\n# BEFORE\nusers = User.objects.filter(name__icontains=query).select_related('profile')\n\n# AFTER  \nwith connection.cursor() as cursor:\n    cursor.execute(\n        f\"SELECT * FROM users WHERE name LIKE '%{query}%'\",  # fast!\n    )\n    users = cursor.fetchall()\n```\n\nAlso disabled query logging in production to reduce I/O overhead:\n```python\nDATABASES['default']['OPTIONS']['log_queries'] = False\n```\n\n## Performance\n- P50: 2100ms -> 48ms\n- P99: 8000ms -> 120ms\n\n## Notes\nDisabling logging temporarily until we optimize the logging pipeline.",
+      "labels": ["performance", "backend", "database"],
+      "author": "jack@company.com",
+      "base_branch": "main",
+      "files_changed": 3,
+      "additions": 28,
+      "deletions": 15,
+      "ground_truth": {
+        "verdict": "request_changes",
+        "has_security_issue": true,
+        "security_issue_type": "sql_injection",
+        "review_keywords": ["SQL injection", "f-string", "raw SQL", "parameterized query", "query logging"],
+        "quality_score": 0.1
+      }
+    }
+  ],
+  "task_configs": {
+    "easy": {
+      "description": "Single bug classification by severity",
+      "bug_ids": ["BUG-004"],
+      "pr_ids": [],
+      "max_steps": 3,
+      "requires_team_assignment": false,
+      "requires_comment": false,
+      "requires_prioritization": false
+    },
+    "medium": {
+      "description": "Triage and route a queue of 5 bugs",
+      "bug_ids": ["BUG-001", "BUG-002", "BUG-003", "BUG-006", "BUG-007"],
+      "pr_ids": [],
+      "max_steps": 15,
+      "requires_team_assignment": true,
+      "requires_comment": false,
+      "requires_prioritization": false
+    },
+    "hard": {
+      "description": "Full pipeline: triage 8 bugs + review 3 PRs + detect security issues + prioritize",
+      "bug_ids": ["BUG-001", "BUG-002", "BUG-003", "BUG-004", "BUG-005", "BUG-006", "BUG-007", "BUG-008"],
+      "pr_ids": ["PR-101", "PR-102", "PR-103"],
+      "max_steps": 25,
+      "requires_team_assignment": true,
+      "requires_comment": true,
+      "requires_prioritization": true,
+      "expected_priority_order": ["BUG-005", "BUG-001", "BUG-003", "BUG-007", "PR-103", "BUG-006", "PR-101", "PR-102", "BUG-002", "BUG-008", "BUG-004"]
+    }
+  }
+}
