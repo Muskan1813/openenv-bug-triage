@@ -381,7 +381,8 @@ async def run_task(task_id: str) -> dict:
 
         # -- Score — matches sample exactly -----------------------------------
         score   = sum(rewards) / max_total_reward if max_total_reward > 0 else 0.0
-        score   = min(max(score, 0.0), 1.0)
+        # score   = min(max(score, 0.0), 1.0)
+        score = min(max(score, 0.001), 0.999)
         success = score >= success_threshold
 
     finally:
