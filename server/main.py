@@ -20,12 +20,14 @@ from contextlib import asynccontextmanager
 from typing import Any
 
 from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel, Field
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from .env import BugTriageEnv
 from .models import BugAction, EnvState, ResetRequest, StepResult
 from .tasks import task_easy, task_medium, task_hard
+from .multi_agent_env import MultiAgentBugTriageEnv, MultiStepResult
 
 
 # ---------------------------------------------------------------------------
@@ -33,7 +35,7 @@ from .tasks import task_easy, task_medium, task_hard
 # ---------------------------------------------------------------------------
 
 env = BugTriageEnv()
-
+multi_env = MultiAgentBugTriageEnv()
 
 # ---------------------------------------------------------------------------
 # App factory
@@ -245,6 +247,74 @@ async def health() -> dict[str, str]:
     """
     return {"status": "ok"}
 
+# ---------------------------------------------------------------------------
+# Multi-agent endpoints
+# ---------------------------------------------------------------------------
+
+class MultiStepRequest(BaseModel):
+    message_a: str = Field(description="Agent A's action JSON string")
+    message_b: str = Field(description="Agent B's action JSON string")
+
+
+class MultiResetRequest(BaseModel):
+    task_id: str | None = Field(default=None)
+
+
+@app.post(
+    "/multi_reset",
+    response_model = MultiStepResult,
+    summary        = "Reset multi-agent episode",
+    tags           = ["Multi-Agent"],
+)
+async def multi_reset(body: MultiResetRequest = MultiResetRequest()) -> MultiStepResult:
+    """Start a new two-agent episode. Omit task_id to use curriculum difficulty."""
+    try:
+        return multi_env.multi_reset(task_id=body.task_id)
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+
+@app.post(
+    "/multi_step",
+    response_model = MultiStepResult,
+    summary        = "Both agents act on current item",
+    tags           = ["Multi-Agent"],
+)
+async def multi_step(body: MultiStepRequest) -> MultiStepResult:
+    """
+    Send both agents' actions simultaneously.
+    message_a = Agent A (Triager) JSON action
+    message_b = Agent B (Reviewer) JSON action
+    """
+    try:
+        return multi_env.multi_step(
+            action_a = BugAction(message=body.message_a),
+            action_b = BugAction(message=body.message_b),
+        )
+    except RuntimeError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+
+@app.get(
+    "/multi_state",
+    summary = "Full multi-agent internal state",
+    tags    = ["Multi-Agent"],
+)
+async def multi_state():
+    """Returns full state of the multi-agent environment including curriculum info."""
+    try:
+        state      = multi_env.get_multi_state()
+        curriculum = multi_env.get_curriculum()
+        return {"state": state, "curriculum": curriculum}
+    except RuntimeError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+# ---------------------------------------------------------------------------
+# THIS IS THE EXISTING root() FUNCTION — DON'T TOUCH ANYTHING BELOW
+# ---------------------------------------------------------------------------
 
 @app.get(
     "/",
