@@ -5,7 +5,7 @@ description: >
   bug reports and reviews code. The agent must classify severity, assign
   bugs to the correct team, and write meaningful review comments — tasks
   that every software team performs daily.
-author: "openenv-bug-triage"
+author: "muskan040"
 tags:
   - openenv
   - code-review
