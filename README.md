@@ -16,7 +16,7 @@ tags:
 [![HuggingFace Space](https://img.shields.io/badge/🤗%20HuggingFace-Space-blue)](https://muskan040-bug-triage-env.hf.space)
 [![GitHub](https://img.shields.io/badge/GitHub-Repository-black)](https://github.com/Muskan1813/openenv-bug-triage/tree/round2-multi-agent)
 [![OpenEnv](https://img.shields.io/badge/OpenEnv-Validated-green)](https://github.com/openenv/openenv)
-[![Training Notebook](https://img.shields.io/badge/Colab-GRPO%20Training-orange)](https://colab.research.google.com/)
+[![Training Notebook](https://img.shields.io/badge/Colab-GRPO%20Training-orange)](https://colab.research.google.com/drive/1-2rRUs1O8_7MPWpFfXTIHZTIfMIbIwrp?usp=sharing)
 [![YouTube Demo](https://img.shields.io/badge/YouTube-Demo%20Video-red?logo=youtube)](https://youtu.be/zoPmFa-J4Os?feature=shared)
 
 ---
@@ -388,7 +388,7 @@ python demo_curriculum.py
 
 ## 📓 Training Notebook
 
-🔗 **[Open GRPO Training Notebook in Colab](#)** ← *(add link)*
+🔗 **[Open GRPO Training Notebook in Colab](https://colab.research.google.com/drive/1-2rRUs1O8_7MPWpFfXTIHZTIfMIbIwrp?usp=sharing)**
 
 The notebook connects directly to the live HF Space, collects real episodes, trains with GRPO via Unsloth + HF TRL, evaluates the trained model, and generates all comparison charts.
 
