@@ -446,7 +446,7 @@ A researcher could write a paper about the consensus reward mechanism alone.
 
 ## 👥 Team
 
-Built at **OpenEnv Hackathon India 2026** by Team Bug Triage.
+Built at **OpenEnv Hackathon India 2026** by Team CodeHub.
 
 ---
 
